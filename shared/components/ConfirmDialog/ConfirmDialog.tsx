@@ -17,6 +17,7 @@ export const ConfirmDialog = ({title, body, confirmLabel, tone, onConfirm, onCan
   const opener = useRef(document.activeElement);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     confirmRef.current?.focus();
@@ -25,6 +26,20 @@ export const ConfirmDialog = ({title, body, confirmLabel, tone, onConfirm, onCan
       if (openerElement instanceof HTMLElement && openerElement.isConnected) openerElement.focus();
     };
   }, []);
+
+  // A click on the title, body or padding moves focus to body, outside the backdrop's onKeyDown;
+  // keys must still go to the dialog and not to the page behind it.
+  useEffect(() => {
+    const keepKeys = (event: KeyboardEvent) => {
+      if (backdropRef.current?.contains(event.target as Node)) return;
+      if (event.key === "Escape") onCancel();
+      else if (event.key === "Tab") (event.shiftKey ? confirmRef : cancelRef).current?.focus();
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    document.addEventListener("keydown", keepKeys, true);
+    return () => document.removeEventListener("keydown", keepKeys, true);
+  }, [onCancel]);
 
   const onKeyDown = (event: React.KeyboardEvent) => {
     // Page-level keydown listeners must not also act: Profile.tsx runs its open popover's action on Enter
@@ -45,7 +60,7 @@ export const ConfirmDialog = ({title, body, confirmLabel, tone, onConfirm, onCan
 
   // Rendered into body: in place, the sticky result box (z-index 50) and the phone navigation drawer (transform)
   // would trap the fixed backdrop below the phone header or inside the drawer.
-  return createPortal(<div className="confirm-dialog-backdrop" role="presentation" onKeyDown={onKeyDown}
+  return createPortal(<div ref={backdropRef} className="confirm-dialog-backdrop" role="presentation" onKeyDown={onKeyDown}
               onClick={(event) => { if (event.target === event.currentTarget) onCancel(); }}>
     <div className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby={titleId}
          aria-describedby={body ? bodyId : undefined}>

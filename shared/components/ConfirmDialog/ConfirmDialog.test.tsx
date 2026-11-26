@@ -81,6 +81,49 @@ describe("ConfirmDialog", () => {
     }
   });
 
+  // A click on the title or body moves focus to document.body, outside the dialog's own key handling
+  describe("with focus moved to the page body", () => {
+    const focusBody = () => (document.activeElement as HTMLElement).blur();
+
+    test("keeps Enter from reaching window keydown listeners", () => {
+      const windowKeydown = vi.fn();
+      window.addEventListener("keydown", windowKeydown);
+      try {
+        renderDialog();
+        focusBody();
+        fireEvent.keyDown(document.body, {key: "Enter"});
+        expect(windowKeydown).not.toHaveBeenCalled();
+      } finally {
+        window.removeEventListener("keydown", windowKeydown);
+      }
+    });
+
+    test("cancels on Escape without reaching window keydown listeners", () => {
+      const windowKeydown = vi.fn();
+      window.addEventListener("keydown", windowKeydown);
+      try {
+        const {onCancel, onConfirm} = renderDialog();
+        focusBody();
+        fireEvent.keyDown(document.body, {key: "Escape"});
+        expect(onCancel).toHaveBeenCalledTimes(1);
+        expect(onConfirm).not.toHaveBeenCalled();
+        expect(windowKeydown).not.toHaveBeenCalled();
+      } finally {
+        window.removeEventListener("keydown", windowKeydown);
+      }
+    });
+
+    test.each([
+      ["Tab", false, "Cancel"],
+      ["Shift+Tab", true, "Reset"],
+    ])("moves focus back into the dialog on %s", (_, shiftKey, to) => {
+      renderDialog();
+      focusBody();
+      fireEvent.keyDown(document.body, {key: "Tab", shiftKey});
+      expect(screen.getByRole("button", {name: to})).toHaveFocus();
+    });
+  });
+
   test.each([
     ["Tab from the confirm button", "Reset", false, "Cancel"],
     ["Shift+Tab from Cancel", "Cancel", true, "Reset"],
