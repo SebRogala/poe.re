@@ -149,9 +149,6 @@ const RegexResultBox = (props: RegexResultBoxProps) => {
         }}>
           Copy
         </button>
-        <button className="rrb-reset-button" onClick={() => setConfirmReset(true)}>
-          Reset
-        </button>
         {onTradeSearch && (
           <button
             className="rrb-trade-button"
@@ -182,6 +179,9 @@ const RegexResultBox = (props: RegexResultBoxProps) => {
         {bugButton && <button className="rrb-bug">
             <BugReport regex={result} />
         </button> }
+        <button className="rrb-reset-button" onClick={() => setConfirmReset(true)}>
+          Reset
+        </button>
       </div>
       {showOptions && <div className="rrb-options">
           <Checkbox label={"Enable custom text"} value={enableCustomText} onChange={setEnableCustomText}/>
