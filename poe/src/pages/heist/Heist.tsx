@@ -12,6 +12,7 @@ import {ProfileContext} from "@poe/components/profile/ProfileContext";
 import {Link} from "react-router-dom";
 import alterationIcon from "@shared/img/linkicons/alteration.png";
 import {PageLink} from "@shared/components/PageLink";
+import {ConfirmDialog} from "@shared/components/ConfirmDialog/ConfirmDialog";
 import {useFavoritePage} from "@poe/core/favorites/useFavoritePage";
 
 
@@ -83,6 +84,7 @@ const Heist = () => {
   const [targetValue, setTargetValue] = useState<number>(profile.heist.targetValue);
   const [requireCoinValue, setRequireCoinValue] = useState(profile.heist.requireCoinValue);
   const [result, setResult] = useState("");
+  const [confirmingValueReset, setConfirmingValueReset] = useState(false);
   const settings = {contractLevels, targetValue, requireCoinValue};
 
   useEffect(() => {
@@ -153,7 +155,19 @@ const Heist = () => {
                  setTargetValue(Number(e.target.value));
                }}/>
         <button className="heist-action-button" onClick={() => setTargetValue(3000)}>High value targets</button>
-        <button className="heist-action-button" onClick={() => setTargetValue(0)}>Reset</button>
+        <button className="heist-action-button" onClick={() => setConfirmingValueReset(true)}>Reset</button>
+        {confirmingValueReset &&
+          <ConfirmDialog
+            tone="neutral"
+            title="Reset minimum target coin value to 0?"
+            confirmLabel="Reset"
+            onConfirm={() => {
+              setConfirmingValueReset(false);
+              setTargetValue(0);
+            }}
+            onCancel={() => setConfirmingValueReset(false)}
+          />
+        }
       </div>
       <h2 className="row">Contract types</h2>
       <div className="row heist-input-container">
