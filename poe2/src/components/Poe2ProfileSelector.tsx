@@ -6,6 +6,7 @@ import {deleteProfile, loadProfileNames, loadSettings, saveSettings, setSelected
 import {Poe2ProfileContext} from "../layout/Poe2ProfileContext";
 import {defaultSettings} from "../settings";
 import ShareDialog from "@shared/components/share/ShareDialog";
+import {ConfirmDialog} from "@shared/components/ConfirmDialog/ConfirmDialog";
 import {poe2Share} from "../pages/share/shareConfig";
 import {GGPKLanguage} from "@poe/utils/Languages";
 import type {Language} from "@shared/typedefs/Language";
@@ -20,6 +21,7 @@ const Poe2ProfileSelector = ({languageSelect = false}: Poe2ProfileSelectorProps)
   const [showNew, setShowNew] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [editName, setEditName] = useState("");
   const [copyCurrentProfile, setCopyCurrentProfile] = useState(false);
   const [warning, setWarning] = useState<string | undefined>(undefined);
@@ -68,7 +70,7 @@ const Poe2ProfileSelector = ({languageSelect = false}: Poe2ProfileSelectorProps)
   };
 
   const confirmDelete = () => {
-    if (currentProfile === "default" || !window.confirm(`Delete profile '${currentProfile}'?`)) return;
+    setConfirmingDelete(false);
     deleteProfile(currentProfile);
     const names = loadProfileNames();
     setProfiles(names);
@@ -101,7 +103,18 @@ const Poe2ProfileSelector = ({languageSelect = false}: Poe2ProfileSelectorProps)
           setShowEdit(true);
         }}>✎
         </div>
-        <div className="profile-icon" onClick={confirmDelete}>✕</div>
+        <div className="profile-icon" onClick={() => {
+          if (currentProfile !== "default") setConfirmingDelete(true);
+        }}>✕</div>
+        {confirmingDelete &&
+          <ConfirmDialog
+            tone="danger"
+            title={`Delete profile '${currentProfile}'?`}
+            confirmLabel="Delete"
+            onConfirm={confirmDelete}
+            onCancel={() => setConfirmingDelete(false)}
+          />
+        }
 
         {showNew &&
           <ProfileEditBox
