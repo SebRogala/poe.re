@@ -12,6 +12,7 @@ import {defaultSettings} from "../../utils/SavedSettings";
 import {ProfileContext} from "./ProfileContext";
 import {GGPKLanguage, GGPKLanguageData} from "../../utils/Languages";
 import ShareDialog from "@shared/components/share/ShareDialog";
+import {ConfirmDialog} from "@shared/components/ConfirmDialog/ConfirmDialog";
 import {poeShare} from "../../pages/share/shareConfig";
 import LeagueSelect from "@shared/components/LeagueSelect";
 import {useLocation, useNavigate} from "react-router-dom";
@@ -31,6 +32,7 @@ const Profile = (props: ProfileProps) => {
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [pendingProfile, setPendingProfile] = useState<string>();
   const [editName, setEditName] = useState("");
   const [copyCurrentProfile, setCopyCurrentProfile] = useState(false);
   const [warning, setWarning] = useState<string | undefined>(undefined);
@@ -38,8 +40,10 @@ const Profile = (props: ProfileProps) => {
   const navigate = useNavigate();
 
   const selectProfile = (nextProfile: string) => {
-    if (location.search.includes("favorite=") && !window.confirm("Discard changes to this favorite and switch profiles?")) return;
-    if (location.search.includes("favorite=")) navigate("/favorites");
+    if (location.search.includes("favorite=")) {
+      setPendingProfile(nextProfile);
+      return;
+    }
     setProfile(nextProfile);
   };
 
@@ -126,6 +130,19 @@ const Profile = (props: ProfileProps) => {
           return <option className="option-league" key={profile} value={profile}>{profile}</option>;
         })};
       </select>
+      {pendingProfile !== undefined &&
+        <ConfirmDialog
+          tone="neutral"
+          title="Discard changes to this favorite and switch profiles?"
+          confirmLabel="Discard"
+          onConfirm={() => {
+            setPendingProfile(undefined);
+            navigate("/favorites");
+            setProfile(pendingProfile);
+          }}
+          onCancel={() => setPendingProfile(undefined)}
+        />
+      }
       <div className="profile-actions">
         <div className="profile-icon profile-icon-large" onClick={() => {
           setShowEdit(false);
