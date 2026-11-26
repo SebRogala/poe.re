@@ -68,16 +68,16 @@ describe("ConfirmDialog", () => {
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
-  // Profile.tsx and FavoriteDetailsDialog close their own popups on a window-level Escape
-  test("keeps Escape from reaching window keydown listeners", () => {
-    const windowEscape = vi.fn();
-    window.addEventListener("keydown", windowEscape);
+  // Profile.tsx closes its popover on a window-level Escape and runs the popover's action (e.g. delete profile) on Enter
+  test.each(["Escape", "Enter"])("keeps %s from reaching window keydown listeners", (key) => {
+    const windowKeydown = vi.fn();
+    window.addEventListener("keydown", windowKeydown);
     try {
       renderDialog();
-      fireEvent.keyDown(screen.getByRole("button", {name: "Reset"}), {key: "Escape"});
-      expect(windowEscape).not.toHaveBeenCalled();
+      fireEvent.keyDown(screen.getByRole("button", {name: "Reset"}), {key});
+      expect(windowKeydown).not.toHaveBeenCalled();
     } finally {
-      window.removeEventListener("keydown", windowEscape);
+      window.removeEventListener("keydown", windowKeydown);
     }
   });
 

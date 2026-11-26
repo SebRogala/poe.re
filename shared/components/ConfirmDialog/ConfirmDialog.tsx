@@ -27,8 +27,9 @@ export const ConfirmDialog = ({title, body, confirmLabel, tone, onConfirm, onCan
   }, []);
 
   const onKeyDown = (event: React.KeyboardEvent) => {
+    // Page-level keydown listeners must not also act: Profile.tsx runs its open popover's action on Enter
+    event.stopPropagation();
     if (event.key === "Escape") {
-      event.stopPropagation();
       onCancel();
     } else if (event.key === "Tab") {
       const first = cancelRef.current, last = confirmRef.current;
