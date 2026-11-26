@@ -1,6 +1,6 @@
 import { Mock, vi } from "vitest";
 import React, {useState} from "react";
-import {render, screen, fireEvent, waitFor} from "@testing-library/react";
+import {render, screen, fireEvent, waitFor, within} from "@testing-library/react";
 import RegexResultBox from "./RegexResultBox";
 
 const Harness = () => {
@@ -89,5 +89,30 @@ describe("RegexResultBox auto-copy", () => {
     const button = screen.getByRole("button", {name: "Favorite"});
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute("title", expect.stringMatching(/non-empty regex/i));
+  });
+});
+
+describe("RegexResultBox reset", () => {
+  test("resets only once the confirm dialog is confirmed", () => {
+    const reset = vi.fn();
+    render(<RegexResultBox result="bar" reset={reset}/>);
+
+    fireEvent.click(screen.getByRole("button", {name: "Reset"}));
+    const dialog = screen.getByRole("alertdialog", {name: "Reset this page?"});
+    expect(reset).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog).getByRole("button", {name: "Reset"}));
+    expect(reset).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  test("does not reset when the confirm dialog is cancelled", () => {
+    const reset = vi.fn();
+    render(<RegexResultBox result="bar" reset={reset}/>);
+
+    fireEvent.click(screen.getByRole("button", {name: "Reset"}));
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", {name: "Cancel"}));
+    expect(reset).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@ import React, {Dispatch, SetStateAction, useEffect, useRef, useState} from "reac
 import {Checkbox} from "../Checkbox/Checkbox";
 import {Spinner} from "../Spinner/Spinner";
 import {BugReport} from "../bugreport/BugReport";
+import {ConfirmDialog} from "../ConfirmDialog/ConfirmDialog";
 import {loadWebSettings, saveWebSettings} from "../../core/WebSettings";
 import {TRANSLATION_NEED} from "@poe/utils/Languages";
 
@@ -68,6 +69,7 @@ const RegexResultBox = (props: RegexResultBoxProps) => {
   const [enableCustomTextInternal, setEnableCustomTextInternal] = useState(customTextProp?.length ? true : false);
   const [favoriteError, setFavoriteError] = useState("");
   const [favoriteSaving, setFavoriteSaving] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   const customText = customTextProp ?? customTextInternal;
   const setCustomText = setCustomTextProp ?? setCustomTextInternal;
@@ -147,9 +149,7 @@ const RegexResultBox = (props: RegexResultBoxProps) => {
         }}>
           Copy
         </button>
-        <button className="rrb-reset-button" onClick={() => {
-          reset();
-        }}>
+        <button className="rrb-reset-button" onClick={() => setConfirmReset(true)}>
           Reset
         </button>
         {onTradeSearch && (
@@ -191,6 +191,17 @@ const RegexResultBox = (props: RegexResultBoxProps) => {
           <Checkbox label={"Auto copy result text"} value={autoCopy} onChange={setAutoCopy}/>
       </div>
       }
+      {confirmReset && <ConfirmDialog
+          tone="danger"
+          title="Reset this page?"
+          body="Everything on this page goes back to its defaults. This can’t be undone."
+          confirmLabel="Reset"
+          onConfirm={() => {
+            setConfirmReset(false);
+            reset();
+          }}
+          onCancel={() => setConfirmReset(false)}
+      />}
     </div>
   )
 
