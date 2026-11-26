@@ -176,12 +176,12 @@ const RegexResultBox = (props: RegexResultBoxProps) => {
         }}>
           Options
         </button>
-        {bugButton && <button className="rrb-bug">
-            <BugReport regex={result} />
-        </button> }
         <button className="rrb-reset-button" onClick={() => setConfirmReset(true)}>
           Reset
         </button>
+        {bugButton && <button className="rrb-bug">
+            <BugReport regex={result} />
+        </button> }
       </div>
       {showOptions && <div className="rrb-options">
           <Checkbox label={"Enable custom text"} value={enableCustomText} onChange={setEnableCustomText}/>
