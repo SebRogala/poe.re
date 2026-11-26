@@ -11,6 +11,7 @@ import {
   FavoriteDetailsDialog,
 } from "@shared/components/favorites/FavoriteDetailsDialog";
 import { FavoritesToolbar } from "@shared/components/favorites/FavoritesToolbar";
+import { ConfirmDialog } from "@shared/components/ConfirmDialog/ConfirmDialog";
 import { FavoriteMetadata } from "@shared/core/favorites/FavoriteTypes";
 import {
   ResolvedFavoriteGroup,
@@ -48,6 +49,11 @@ const Favorites = () => {
   const [editing, setEditing] = useState<Poe2FavoriteRecord>();
   const [details, setDetails] =
     useState<ResolvedFavoriteGroup<Poe2FavoriteRecord>>();
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    title: string;
+    body?: string;
+  }>();
   const [tags, setTags] = useState<string[]>([]);
   const [copiedFavoriteId, setCopiedFavoriteId] = useState<string>();
   const [groupEditorId, setGroupEditorId] = useState<string | null>();
@@ -130,11 +136,13 @@ const Favorites = () => {
       (entry) =>
         isPoe2FavoriteGroup(entry) && entry.memberIds.includes(favorite.id),
     );
-    const affected = groups.length
-      ? `\n\nIt is referenced by: ${groups.map((entry) => entry.name).join(", ")}. Those groups will be updated or removed if fewer than two favorites remain.`
-      : "";
-    if (window.confirm(`Delete favorite “${favorite.name}”?${affected}`))
-      remove(favorite.id);
+    setPendingDelete({
+      id: favorite.id,
+      title: `Delete favorite “${favorite.name}”?`,
+      body: groups.length
+        ? `It is referenced by: ${groups.map((entry) => entry.name).join(", ")}. Those groups will be updated or removed if fewer than two favorites remain.`
+        : undefined,
+    });
   };
 
   return (
@@ -294,6 +302,19 @@ const Favorites = () => {
             else createStatic(regex, metadata);
             setStaticEditorId(undefined);
           }}
+        />
+      )}
+      {pendingDelete && (
+        <ConfirmDialog
+          tone="danger"
+          title={pendingDelete.title}
+          body={pendingDelete.body}
+          confirmLabel="Delete"
+          onConfirm={() => {
+            remove(pendingDelete.id);
+            setPendingDelete(undefined);
+          }}
+          onCancel={() => setPendingDelete(undefined)}
         />
       )}
     </>

@@ -18,6 +18,7 @@ import {
   FavoriteDetailsDialog,
 } from "@shared/components/favorites/FavoriteDetailsDialog";
 import { FavoritesToolbar } from "@shared/components/favorites/FavoritesToolbar";
+import { ConfirmDialog } from "@shared/components/ConfirmDialog/ConfirmDialog";
 import { useFavorites } from "@poe/core/favorites/FavoritesContext";
 import { useRenderedFavorites } from "@poe/core/favorites/useRenderedFavorites";
 import { FAVORITE_PAGE_REGISTRY } from "@poe/core/favorites/FavoritePageRegistry";
@@ -58,6 +59,11 @@ const Favorites = () => {
   const [detailsId, setDetailsId] = useState<string>();
   const [customizeId, setCustomizeId] = useState<string>();
   const [copiedFavoriteId, setCopiedFavoriteId] = useState<string>();
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    title: string;
+    body?: string;
+  }>();
   const [groupEditorId, setGroupEditorId] = useState<string | null>();
   const [staticEditorId, setStaticEditorId] = useState<string | null>();
   const [visibilityMode, setVisibilityMode] = useState(false);
@@ -151,11 +157,13 @@ const Favorites = () => {
       (entry) =>
         isFavoriteGroup(entry) && entry.memberIds.includes(favorite.id),
     );
-    const affected = groups.length
-      ? `\n\nIt is referenced by: ${groups.map((entry) => entry.name).join(", ")}. Those groups will be updated or removed if fewer than two favorites remain.`
-      : "";
-    if (window.confirm(`Delete favorite “${favorite.name}”?${affected}`))
-      remove(favorite.id);
+    setPendingDelete({
+      id: favorite.id,
+      title: `Delete favorite “${favorite.name}”?`,
+      body: groups.length
+        ? `It is referenced by: ${groups.map((entry) => entry.name).join(", ")}. Those groups will be updated or removed if fewer than two favorites remain.`
+        : undefined,
+    });
   };
 
   return (
@@ -320,6 +328,19 @@ const Favorites = () => {
             else createStatic(regex, metadata);
             setStaticEditorId(undefined);
           }}
+        />
+      )}
+      {pendingDelete && (
+        <ConfirmDialog
+          tone="danger"
+          title={pendingDelete.title}
+          body={pendingDelete.body}
+          confirmLabel="Delete"
+          onConfirm={() => {
+            remove(pendingDelete.id);
+            setPendingDelete(undefined);
+          }}
+          onCancel={() => setPendingDelete(undefined)}
         />
       )}
     </>
